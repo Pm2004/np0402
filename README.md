@@ -1,1 +1,1 @@
-# npm
+# basic npm module
