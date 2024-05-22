@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# Directories
+NODE_SOURCE_DIR="build/node"
+NODE_INSTALL_DIR="$NODE_SOURCE_DIR/installed"
+
+# Functions
+check_and_clone_node_repo() {
+    if [ ! -d "$NODE_SOURCE_DIR" ]; then
+        echo "Cloning Node.js repository..."
+        git clone https://github.com/joyent/node.git "$NODE_SOURCE_DIR"
+    else
+        echo "Node.js source directory already exists."
+    fi
+}
+
+build_and_install_node() {
+    if [ ! -d "$NODE_INSTALL_DIR" ]; then
+        echo "Building and installing Node.js..."
+        mkdir -p "$NODE_INSTALL_DIR"
+        pushd "$NODE_SOURCE_DIR" > /dev/null
+        ./configure --prefix="$PWD/$NODE_INSTALL_DIR"
+        make install
+        popd > /dev/null
+    else
+        echo "Node.js is already installed."
+    fi
+}
+
+add_node_to_path() {
+    echo "Adding Node.js to PATH..."
+    export PATH="$PWD/$NODE_INSTALL_DIR/bin:$PATH"
+}
+
+install_npm() {
+    echo "Installing npm..."
+    curl -L https://npmjs.org/install.sh | clean=yes sh
+}
+
+check_command_in_path() {
+    command -v $1 > /dev/null
+}
+
+# Main Script
+echo "Starting Node.js setup..."
+
+# Check and set up Node.js
+check_and_clone_node_repo
+build_and_install_node
+if ! check_command_in_path "node"; then
+    add_node_to_path
+fi
+node --version
+
+# Check and set up npm
+if ! check_command_in_path "npm"; then
+    install_npm
+fi
+npm --version
+
+echo "Node.js and npm setup complete."
